@@ -1,11 +1,4 @@
-use sha2::{Digest, Sha256};
-
-fn hash_hex(data: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(data.as_bytes());
-    let hash = hasher.finalize();
-    format!("{:x}", hash)
-}
+use crate::hash::Hash;
 
 #[derive(Debug, Clone)]
 struct Node {
@@ -17,7 +10,7 @@ struct Node {
 impl Node {
     fn leaf(data: &str) -> Self {
         Self {
-            hash: hash_hex(data),
+            hash: Hash::from_str(data).to_hex(),
             left: None,
             right: None,
         }
@@ -25,7 +18,7 @@ impl Node {
 
     fn new(left: Node, right: Node) -> Self {
         Self {
-            hash: hash_hex(&format!("{}{}", left.hash, right.hash)),
+            hash: Hash::from_str(&format!("{}{}", left.hash, right.hash)).to_hex(),
             left: Some(Box::new(left.clone())),
             right: Some(Box::new(right.clone())),
         }
