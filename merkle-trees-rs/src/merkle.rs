@@ -5,6 +5,7 @@ struct Node {
     hash: Hash,
     left: Option<Box<Node>>,
     right: Option<Box<Node>>,
+    size: usize,
 }
 
 impl Node {
@@ -13,6 +14,7 @@ impl Node {
             hash: Hash::from_str(data),
             left: None,
             right: None,
+            size: 1,
         }
     }
 
@@ -21,8 +23,47 @@ impl Node {
             hash: Hash::from_str(&format!("{}{}", left.hash, right.hash)),
             left: Some(Box::new(left.clone())),
             right: Some(Box::new(right.clone())),
+            size: left.size + right.size,
         }
     }
+
+    fn merkle_path(&self, index: usize) -> Option<Vec<ProofStep>> {
+        if self.left.is_none() && self.right.is_none() {
+            return Some(Vec::new());
+        }
+
+        if let (Some(left), Some(right)) = (&self.left, &self.right) {
+            if index < left.size {
+                let mut path = left.merkle_path(index)?;
+                path.push(ProofStep {
+                    hash: right.hash.clone(),
+                    position: Position::Right,
+                });
+                Some(path)
+            } else {
+                let mut path = right.merkle_path(index - left.size)?;
+                path.push(ProofStep {
+                    hash: left.hash.clone(),
+                    position: Position::Left,
+                });
+                Some(path)
+            }
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Position {
+    Left,
+    Right,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ProofStep {
+    hash: Hash,
+    position: Position,
 }
 
 struct MerkleTree {
@@ -94,6 +135,7 @@ mod tests {
             tree.root.hash,
             "5b260dbcbff182d10cdbd21d8cb9e4446fe71820bb91c8dced8dcfd0e8a9c8ac".to_string()
         );
+        assert_eq!(tree.root.size, 4);
     }
 
     #[test]
@@ -104,5 +146,56 @@ mod tests {
             tree.root.hash,
             "d450c7864e6af68eab970295be53ea3d4e550b775079c366de34d21e15610add".to_string()
         );
+        assert_eq!(tree.root.size, 4);
+    }
+
+    #[test]
+    fn test_creates_proof_for_first_index() {
+        let leaves = vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ];
+        let tree = MerkleTree::new(leaves);
+        let proof = tree.root.merkle_path(0);
+
+        let expected = vec![
+            ProofStep {
+                hash: Hash::from_str("Tx2"),
+                position: Position::Right,
+            },
+            ProofStep {
+                hash: Node::new(Node::leaf("Tx3"), Node::leaf("Tx4")).hash,
+                position: Position::Right,
+            },
+        ];
+
+        assert_eq!(Some(expected), proof);
+    }
+
+    #[test]
+    fn test_creates_proof_for_second_index() {
+        let leaves = vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ];
+        let tree = MerkleTree::new(leaves);
+        let proof = tree.root.merkle_path(1);
+
+        let expected = vec![
+            ProofStep {
+                hash: Hash::from_str("Tx1"),
+                position: Position::Left,
+            },
+            ProofStep {
+                hash: Node::new(Node::leaf("Tx3"), Node::leaf("Tx4")).hash,
+                position: Position::Right,
+            },
+        ];
+
+        assert_eq!(Some(expected), proof);
     }
 }
