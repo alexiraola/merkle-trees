@@ -95,6 +95,14 @@ impl MerkleTree {
         }
         level.remove(0)
     }
+
+    fn verify_proof(&self, proof: Vec<ProofStep>, hash: Hash) -> bool {
+        let root = proof.iter().fold(hash, |hash, step| match step.position {
+            Position::Left => Hash::from_str(&format!("{}{}", step.hash, hash)),
+            Position::Right => Hash::from_str(&format!("{}{}", hash, step.hash)),
+        });
+        root == self.root.hash
+    }
 }
 
 // Test module
@@ -197,5 +205,21 @@ mod tests {
         ];
 
         assert_eq!(Some(expected), proof);
+    }
+
+    #[test]
+    fn test_verifies_leaf_with_valid_proof() {
+        let leaves = vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ];
+        let tree = MerkleTree::new(leaves);
+        let proof0 = tree.root.merkle_path(0);
+        let proof1 = tree.root.merkle_path(1);
+
+        assert!(tree.verify_proof(proof0.unwrap(), Hash::from_str("Tx1")));
+        assert!(!tree.verify_proof(proof1.unwrap(), Hash::from_str("Tx1")));
     }
 }
