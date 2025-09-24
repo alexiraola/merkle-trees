@@ -26,6 +26,18 @@ impl Display for Hash {
     }
 }
 
+impl PartialEq<&str> for Hash {
+    fn eq(&self, other: &&str) -> bool {
+        self.to_hex() == *other
+    }
+}
+
+impl PartialEq<String> for Hash {
+    fn eq(&self, other: &String) -> bool {
+        self.to_hex() == *other
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

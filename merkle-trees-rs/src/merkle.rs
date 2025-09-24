@@ -2,7 +2,7 @@ use crate::hash::Hash;
 
 #[derive(Debug, Clone)]
 struct Node {
-    hash: String,
+    hash: Hash,
     left: Option<Box<Node>>,
     right: Option<Box<Node>>,
 }
@@ -10,7 +10,7 @@ struct Node {
 impl Node {
     fn leaf(data: &str) -> Self {
         Self {
-            hash: Hash::from_str(data).to_hex(),
+            hash: Hash::from_str(data),
             left: None,
             right: None,
         }
@@ -18,7 +18,7 @@ impl Node {
 
     fn new(left: Node, right: Node) -> Self {
         Self {
-            hash: Hash::from_str(&format!("{}{}", left.hash, right.hash)).to_hex(),
+            hash: Hash::from_str(&format!("{}{}", left.hash, right.hash)),
             left: Some(Box::new(left.clone())),
             right: Some(Box::new(right.clone())),
         }
