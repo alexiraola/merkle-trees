@@ -66,14 +66,19 @@ struct ProofStep {
     position: Position,
 }
 
-struct MerkleTree {
+#[derive(Debug, Clone)]
+pub struct MerkleTree {
     root: Node,
 }
 
 impl MerkleTree {
-    fn new(leaves: Vec<String>) -> Self {
+    pub fn new(leaves: Vec<String>) -> Self {
         let root = Self::build_tree(leaves);
         Self { root }
+    }
+
+    pub fn hash(&self) -> Hash {
+        self.root.hash.clone()
     }
 
     fn build_tree(leaves: Vec<String>) -> Node {
