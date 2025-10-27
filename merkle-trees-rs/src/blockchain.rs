@@ -18,8 +18,32 @@ impl Blockchain {
         self.blocks.push(block);
     }
 
+    fn replace_genesis(&mut self, transactions: Vec<String>) {
+        let block = Block::first(transactions);
+        match self.blocks.first() {
+            None => self.blocks.push(block),
+            Some(_) => self.blocks[0] = block,
+        }
+    }
+
     fn hash(&self) -> Option<Hash> {
         self.blocks.last().map(|b| b.hash.clone())
+    }
+
+    fn verify(&self) -> bool {
+        let mut previous_hash: Option<Hash> = None;
+        for b in self.blocks.iter() {
+            match previous_hash {
+                None => (),
+                Some(hash) => {
+                    if hash != b.previous_hash.clone().unwrap() {
+                        return false;
+                    }
+                }
+            }
+            previous_hash = Some(b.hash.clone());
+        }
+        true
     }
 }
 
@@ -69,5 +93,64 @@ mod tests {
             blockchain.hash().unwrap(),
             "ba607b6f1490f3257354f1831e41a759dafc716d96c230e3858fb6a53393be39"
         );
+    }
+
+    #[test]
+    fn test_verifies_chain_validity() {
+        let mut blockchain = Blockchain::new();
+
+        blockchain.add_block(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ]);
+        blockchain.add_block(vec![
+            "Tx5".to_string(),
+            "Tx6".to_string(),
+            "Tx7".to_string(),
+            "Tx8".to_string(),
+        ]);
+        blockchain.add_block(vec![
+            "Tx9".to_string(),
+            "Tx10".to_string(),
+            "Tx11".to_string(),
+            "Tx12".to_string(),
+        ]);
+
+        assert!(blockchain.verify());
+    }
+
+    #[test]
+    fn test_does_not_verify_invalid_chain() {
+        let mut blockchain = Blockchain::new();
+
+        blockchain.add_block(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ]);
+        blockchain.add_block(vec![
+            "Tx5".to_string(),
+            "Tx6".to_string(),
+            "Tx7".to_string(),
+            "Tx8".to_string(),
+        ]);
+        blockchain.add_block(vec![
+            "Tx9".to_string(),
+            "Tx10".to_string(),
+            "Tx11".to_string(),
+            "Tx12".to_string(),
+        ]);
+
+        blockchain.replace_genesis(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx5".to_string(),
+        ]);
+
+        assert!(!blockchain.verify());
     }
 }

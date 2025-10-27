@@ -4,7 +4,7 @@ use crate::merkle::MerkleTree;
 #[derive(Debug, Clone, Eq)]
 pub struct Block {
     pub hash: Hash,
-    previous_hash: Option<Hash>,
+    pub previous_hash: Option<Hash>,
     pub transactions: Vec<String>,
     merkle_tree: MerkleTree,
     timestamp: u32,
@@ -100,5 +100,43 @@ mod tests {
             next_block.hash,
             "ba607b6f1490f3257354f1831e41a759dafc716d96c230e3858fb6a53393be39"
         );
+    }
+
+    #[test]
+    fn test_two_blocks_with_the_same_transactions_have_equal_hash() {
+        let block = Block::first(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ]);
+
+        let other_block = Block::first(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ]);
+
+        assert_eq!(block, other_block);
+    }
+
+    #[test]
+    fn test_two_blocks_with_the_different_transactions_have_not_equal_hash() {
+        let block = Block::first(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx4".to_string(),
+        ]);
+
+        let other_block = Block::first(vec![
+            "Tx1".to_string(),
+            "Tx2".to_string(),
+            "Tx3".to_string(),
+            "Tx5".to_string(),
+        ]);
+
+        assert_ne!(block, other_block);
     }
 }
