@@ -1,6 +1,6 @@
 use crate::hash::Hash;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 struct Node {
     hash: Hash,
     left: Option<Box<Node>>,
@@ -54,6 +54,12 @@ impl Node {
     }
 }
 
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.hash == other.hash
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Position {
     Left,
@@ -66,7 +72,7 @@ struct ProofStep {
     position: Position,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct MerkleTree {
     root: Node,
 }
@@ -107,6 +113,12 @@ impl MerkleTree {
             Position::Right => Hash::from_str(&format!("{}{}", hash, step.hash)),
         });
         root == self.root.hash
+    }
+}
+
+impl PartialEq for MerkleTree {
+    fn eq(&self, other: &Self) -> bool {
+        self.hash() == other.hash()
     }
 }
 

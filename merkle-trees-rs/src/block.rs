@@ -1,11 +1,11 @@
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct Block {
     pub hash: Hash,
     previous_hash: Option<Hash>,
-    transactions: Vec<String>,
+    pub transactions: Vec<String>,
     merkle_tree: MerkleTree,
     timestamp: u32,
 }
@@ -45,6 +45,12 @@ impl Block {
             merkle_tree,
             timestamp,
         }
+    }
+}
+
+impl PartialEq for Block {
+    fn eq(&self, other: &Self) -> bool {
+        return self.hash == other.hash;
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::block::Block;
+use crate::hash::Hash;
 
 struct Blockchain {
     blocks: Vec<Block>,
@@ -12,13 +13,13 @@ impl Blockchain {
     fn add_block(&mut self, transactions: Vec<String>) {
         let block = match self.blocks.last() {
             None => Block::first(transactions),
-            Some(block) => Block::new(block.hash, transactions),
+            Some(last_block) => Block::new(last_block.hash.clone(), transactions),
         };
-        self.blocks.append(block);
+        self.blocks.push(block);
     }
 
     fn hash(&self) -> Option<Hash> {
-        return self.blocks.last()?.hash();
+        self.blocks.last().map(|b| b.hash.clone())
     }
 }
 
@@ -43,9 +44,9 @@ mod tests {
             "Tx4".to_string(),
         ]);
 
-        blockchain.add_block(genesis);
+        blockchain.add_block(genesis.transactions);
 
-        assert_eq!(blockchain.hash(), Some(genesis.hash()));
+        assert_eq!(blockchain.hash(), Some(genesis.hash));
     }
     #[test]
     fn test_adds_two_blocks() {
