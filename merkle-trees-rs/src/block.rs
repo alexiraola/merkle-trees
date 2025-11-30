@@ -6,6 +6,7 @@ pub struct Block {
     pub hash: Hash,
     pub previous_hash: Option<Hash>,
     pub transactions: Vec<String>,
+    nonce: u32,
     merkle_tree: MerkleTree,
     timestamp: u32,
 }
@@ -27,21 +28,23 @@ impl Block {
             hash,
             previous_hash: Some(previous_hash),
             transactions,
+            nonce: 0,
             merkle_tree,
             timestamp,
         }
     }
 
-    pub fn first(transactions: Vec<String>) -> Self {
+    pub fn first(transactions: Vec<String>, nonce: u32) -> Self {
         let merkle_tree = MerkleTree::new(transactions.clone());
         let timestamp = 0;
 
-        let hash = Hash::from_str(&format!("{}{}", merkle_tree.hash(), timestamp));
+        let hash = Hash::from_str(&format!("{}{}{}", merkle_tree.hash(), nonce, timestamp));
 
         Self {
             hash,
             previous_hash: None,
             transactions,
+            nonce,
             merkle_tree,
             timestamp,
         }
@@ -50,7 +53,7 @@ impl Block {
 
 impl PartialEq for Block {
     fn eq(&self, other: &Self) -> bool {
-        return self.hash == other.hash;
+        self.hash == other.hash
     }
 }
 
@@ -66,23 +69,26 @@ mod tests {
             "Tx3".to_string(),
             "Tx4".to_string(),
         ];
-        let block = Block::first(transactions);
+        let block = Block::first(transactions, 0);
 
         assert_eq!(block.previous_hash, None);
         assert_eq!(
             block.hash,
-            "0ee2232ffc71c2c2c9bf07d1d09a0877b287694a99a85aba50e6202e1d131250"
+            "114114b048f64608bc91d8f0c55da372716cef4d1e0e89544decf9f74dfa8659"
         );
     }
 
     #[test]
     fn test_creates_block_with_previous() {
-        let genesis = Block::first(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
+        let genesis = Block::first(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            0,
+        );
 
         let next_block = Block::new(
             genesis.hash.clone(),
@@ -98,44 +104,56 @@ mod tests {
         assert_eq!(next_block.timestamp, 0);
         assert_eq!(
             next_block.hash,
-            "ba607b6f1490f3257354f1831e41a759dafc716d96c230e3858fb6a53393be39"
+            "80f2614d770a66d5e8391321482285f2e5167af3d11ff9360d47c5de2ce97421"
         );
     }
 
     #[test]
     fn test_two_blocks_with_the_same_transactions_have_equal_hash() {
-        let block = Block::first(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
+        let block = Block::first(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            0,
+        );
 
-        let other_block = Block::first(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
+        let other_block = Block::first(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            0,
+        );
 
         assert_eq!(block, other_block);
     }
 
     #[test]
     fn test_two_blocks_with_the_different_transactions_have_not_equal_hash() {
-        let block = Block::first(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
+        let block = Block::first(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            0,
+        );
 
-        let other_block = Block::first(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx5".to_string(),
-        ]);
+        let other_block = Block::first(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx5".to_string(),
+            ],
+            0,
+        );
 
         assert_ne!(block, other_block);
     }
