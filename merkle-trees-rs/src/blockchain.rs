@@ -13,7 +13,7 @@ impl Blockchain {
     fn add_block(&mut self, transactions: Vec<String>) {
         let block = match self.blocks.last() {
             None => Block::first(transactions, 0),
-            Some(last_block) => Block::new(last_block.hash.clone(), transactions),
+            Some(last_block) => Block::new(Some(last_block.hash.clone()), transactions, 0),
         };
         self.blocks.push(block);
     }
@@ -36,7 +36,7 @@ impl Blockchain {
             match previous_hash {
                 None => (),
                 Some(hash) => {
-                    if hash != b.previous_hash.clone().unwrap() {
+                    if hash != b.previous_hash.clone() {
                         return false;
                     }
                 }
@@ -94,7 +94,7 @@ mod tests {
 
         assert_eq!(
             blockchain.hash().unwrap().to_hex(),
-            "80f2614d770a66d5e8391321482285f2e5167af3d11ff9360d47c5de2ce97421"
+            "65c751e21d19d8c6c1118b3032a669fc9b721b7810d18b26b1b47dbd1f941488"
         );
     }
 

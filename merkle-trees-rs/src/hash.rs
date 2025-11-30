@@ -38,6 +38,12 @@ impl PartialEq<String> for Hash {
     }
 }
 
+impl Default for Hash {
+    fn default() -> Self {
+        Hash([0u8; 32])
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
