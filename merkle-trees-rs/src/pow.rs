@@ -1,4 +1,21 @@
+use crate::block::Block;
 use crate::hash;
+
+fn build_block(
+    previous_hash: Option<hash::Hash>,
+    transactions: Vec<String>,
+    difficulty: usize,
+) -> Block {
+    let prefix = build_prefix(difficulty);
+    let mut nonce = 0;
+    let mut block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
+
+    while !block.hash.to_hex().starts_with(&prefix) {
+        nonce += 1;
+        block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
+    }
+    block.clone()
+}
 
 fn proof_of_work(block: String, difficulty: usize) -> u32 {
     let prefix = build_prefix(difficulty);
@@ -34,5 +51,13 @@ mod tests {
         let nonce = proof_of_work(block.clone(), difficulty);
         let hash = hash::Hash::from_str(&format!("{}{}", block, nonce));
         assert!(hash.to_hex().starts_with("0000"));
+    }
+
+    #[test]
+    fn test_build_block_with_difficulty() {
+        let transactions = vec!["Tx1".to_string(), "Tx2".to_string(), "Tx3".to_string()];
+        let difficulty = 2;
+        let block = build_block(None, transactions.clone(), difficulty);
+        assert!(block.hash.to_hex().starts_with("00"));
     }
 }
