@@ -6,7 +6,7 @@ pub struct Block {
     pub hash: Hash,
     pub previous_hash: Hash,
     pub transactions: Vec<String>,
-    nonce: u32,
+    pub nonce: u32,
     merkle_tree: MerkleTree,
     timestamp: u32,
 }

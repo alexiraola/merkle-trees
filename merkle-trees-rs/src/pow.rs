@@ -1,7 +1,7 @@
 use crate::block::Block;
 use crate::hash;
 
-fn build_block(
+pub fn build_block(
     previous_hash: Option<hash::Hash>,
     transactions: Vec<String>,
     difficulty: usize,
@@ -11,7 +11,7 @@ fn build_block(
     let mut block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
 
     while !block.hash.to_hex().starts_with(&prefix) {
-        nonce += 1;
+        nonce = rand::random_range(0..u32::MAX);
         block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
     }
     block.clone()

@@ -6,5 +6,6 @@ mod pos;
 mod pow;
 
 fn main() {
-    println!("Hello, world!");
+    let mut blockchain = blockchain::Blockchain::new();
+    blockchain.build_with_hash_rate(60.0);
 }

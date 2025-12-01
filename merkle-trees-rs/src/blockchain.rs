@@ -1,12 +1,15 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::block::Block;
 use crate::hash::Hash;
+use crate::pow::build_block;
 
-struct Blockchain {
+pub struct Blockchain {
     blocks: Vec<Block>,
 }
 
 impl Blockchain {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Blockchain { blocks: vec![] }
     }
 
@@ -16,6 +19,60 @@ impl Blockchain {
             Some(last_block) => Block::new(Some(last_block.hash.clone()), transactions, 0),
         };
         self.blocks.push(block);
+    }
+
+    pub fn build_with_hash_rate(&mut self, hash_rate: f64) {
+        let mut difficulty = 4;
+        let start_time = SystemTime::now();
+
+        println!(
+            "Starting block generation: {}",
+            start_time.duration_since(UNIX_EPOCH).unwrap().as_secs()
+        );
+
+        while self.blocks.len() < 2016 {
+            let transactions = (self.blocks.len()..self.blocks.len() + 4)
+                .map(|i| format!("Tx{}", i).to_string())
+                .collect();
+
+            println!(
+                "Block num {}, difficulty {}",
+                self.blocks.len() + 1,
+                difficulty
+            );
+
+            let next_block = match self.blocks.last() {
+                None => build_block(None, transactions, difficulty),
+                Some(last_block) => {
+                    build_block(Some(last_block.hash.clone()), transactions, difficulty)
+                }
+            };
+
+            println!(
+                "Built block with hash {}, nonce {}",
+                next_block.hash.to_hex(),
+                next_block.nonce
+            );
+
+            self.blocks.push(next_block);
+
+            let total_time = SystemTime::now()
+                .duration_since(start_time)
+                .map(|duration| duration.as_secs_f64() / self.blocks.len() as f64);
+
+            match total_time {
+                Ok(rate) => {
+                    if rate > hash_rate {
+                        difficulty -= 1;
+                        println!("Hash rate is {}, decreasing difficulty", rate);
+                    } else {
+                        difficulty += 1;
+                        println!("Hash rate is {}, increasing difficulty", rate);
+                    }
+                }
+                Err(e) => print!("{}", e),
+            };
+        }
     }
 
     fn replace_genesis(&mut self, transactions: Vec<String>) {
