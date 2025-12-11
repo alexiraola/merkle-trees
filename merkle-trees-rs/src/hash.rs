@@ -1,7 +1,7 @@
 use sha2::{Digest, Sha256};
 use std::fmt::{Display, Write};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Hash([u8; 32]);
 
 impl Hash {
@@ -38,12 +38,6 @@ impl PartialEq<String> for Hash {
     }
 }
 
-impl Default for Hash {
-    fn default() -> Self {
-        Hash([0u8; 32])
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -53,6 +47,33 @@ mod tests {
         let hash = Hash::from_str("Hello, world!");
         assert_eq!(
             hash.to_hex(),
+            "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3"
+        );
+    }
+
+    #[test]
+    fn test_equals_string() {
+        let hash = Hash::from_str("Hello, world!");
+        assert_eq!(
+            hash,
+            "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3"
+        );
+    }
+
+    #[test]
+    fn test_does_not_equal_wrong_hash() {
+        let hash = Hash::from_str("Hello, world!");
+        assert_ne!(
+            hash,
+            "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd4"
+        );
+    }
+
+    #[test]
+    fn test_displays_hash() {
+        let hash = Hash::from_str("Hello, world!");
+        assert_eq!(
+            format!("{hash}"),
             "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3"
         );
     }
