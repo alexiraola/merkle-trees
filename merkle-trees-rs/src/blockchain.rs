@@ -15,7 +15,7 @@ impl Blockchain {
 
     fn add_block(&mut self, transactions: Vec<String>) {
         let block = match self.blocks.last() {
-            None => Block::first(transactions, 0),
+            None => Block::genesis(transactions, 0),
             Some(last_block) => Block::new(Some(last_block.hash()), transactions, 0),
         };
         self.blocks.push(block);
@@ -74,7 +74,7 @@ impl Blockchain {
     }
 
     fn replace_genesis(&mut self, transactions: Vec<String>) {
-        let block = Block::first(transactions, 0);
+        let block = Block::genesis(transactions, 0);
         match self.blocks.first() {
             None => self.blocks.push(block),
             Some(_) => self.blocks[0] = block,
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn test_adds_a_block() {
         let mut blockchain = Blockchain::new();
-        let genesis = Block::first(
+        let genesis = Block::genesis(
             vec![
                 "Tx1".to_string(),
                 "Tx2".to_string(),

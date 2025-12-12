@@ -33,7 +33,7 @@ impl Block {
         self.header.hash()
     }
 
-    pub fn first(transactions: Vec<String>, nonce: u32) -> Self {
+    pub fn genesis(transactions: Vec<String>, nonce: u32) -> Self {
         Self::new(None, transactions, nonce)
     }
 }
@@ -56,7 +56,7 @@ mod tests {
             "Tx3".to_string(),
             "Tx4".to_string(),
         ];
-        let block = Block::first(transactions, 0);
+        let block = Block::genesis(transactions, 0);
 
         assert_eq!(block.header.previous_hash, Hash::default());
         assert_eq!(
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_creates_block_with_previous() {
-        let genesis = Block::first(
+        let genesis = Block::genesis(
             vec![
                 "Tx1".to_string(),
                 "Tx2".to_string(),
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_two_blocks_with_the_same_transactions_have_equal_hash() {
-        let block = Block::first(
+        let block = Block::genesis(
             vec![
                 "Tx1".to_string(),
                 "Tx2".to_string(),
@@ -108,7 +108,7 @@ mod tests {
             0,
         );
 
-        let other_block = Block::first(
+        let other_block = Block::genesis(
             vec![
                 "Tx1".to_string(),
                 "Tx2".to_string(),
@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn test_two_blocks_with_the_different_transactions_have_not_equal_hash() {
-        let block = Block::first(
+        let block = Block::genesis(
             vec![
                 "Tx1".to_string(),
                 "Tx2".to_string(),
@@ -133,7 +133,7 @@ mod tests {
             0,
         );
 
-        let other_block = Block::first(
+        let other_block = Block::genesis(
             vec![
                 "Tx1".to_string(),
                 "Tx2".to_string(),
