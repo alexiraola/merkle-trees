@@ -5,6 +5,10 @@ use std::fmt::{Display, Write};
 pub struct Hash([u8; 32]);
 
 impl Hash {
+    pub fn new(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+
     pub fn from_str(data: &str) -> Self {
         let hash = Sha256::digest(data);
         Self(hash.into())
@@ -24,6 +28,12 @@ impl Hash {
 
     pub fn to_bytes(&self) -> [u8; 32] {
         self.0
+    }
+}
+
+impl From<[u8; 32]> for Hash {
+    fn from(bytes: [u8; 32]) -> Self {
+        Self(bytes)
     }
 }
 
