@@ -12,11 +12,10 @@ impl Block {
     pub fn new(previous_hash: Option<Hash>, transactions: Vec<String>, nonce: u32) -> Self {
         let merkle_tree = MerkleTree::new(transactions.clone());
         let timestamp = 0;
-        let previous_hash = previous_hash.unwrap_or_default();
 
         let header = BlockHeader::new(
             256,
-            previous_hash.clone(),
+            previous_hash.unwrap_or_default(),
             merkle_tree.hash(),
             timestamp,
             0x00000000,
