@@ -9,7 +9,6 @@ pub struct Block {
     pub previous_hash: Hash,
     pub transactions: Vec<String>,
     pub nonce: u32,
-    timestamp: u32,
 }
 
 impl Block {
@@ -41,7 +40,6 @@ impl Block {
             previous_hash,
             transactions,
             nonce,
-            timestamp,
         }
     }
 
@@ -101,7 +99,7 @@ mod tests {
         );
 
         assert_eq!(next_block.previous_hash, genesis.hash);
-        assert_eq!(next_block.timestamp, 0);
+        assert_eq!(next_block.header.timestamp, 0);
         assert_eq!(
             next_block.hash,
             "65c751e21d19d8c6c1118b3032a669fc9b721b7810d18b26b1b47dbd1f941488"
