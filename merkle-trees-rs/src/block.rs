@@ -6,9 +6,7 @@ use crate::merkle::MerkleTree;
 pub struct Block {
     pub header: BlockHeader,
     pub hash: Hash,
-    pub previous_hash: Hash,
     pub transactions: Vec<String>,
-    pub nonce: u32,
 }
 
 impl Block {
@@ -37,9 +35,7 @@ impl Block {
         Self {
             header,
             hash,
-            previous_hash,
             transactions,
-            nonce,
         }
     }
 
@@ -68,7 +64,7 @@ mod tests {
         ];
         let block = Block::first(transactions, 0);
 
-        assert_eq!(block.previous_hash, Hash::default());
+        assert_eq!(block.header.previous_hash, Hash::default());
         assert_eq!(
             block.hash,
             "13f349812c3129e764236036562c3ade6d5c7f6c5f3f70fa7c94d8cdd6daca5f"
@@ -98,7 +94,7 @@ mod tests {
             0,
         );
 
-        assert_eq!(next_block.previous_hash, genesis.hash);
+        assert_eq!(next_block.header.previous_hash, genesis.hash);
         assert_eq!(next_block.header.timestamp, 0);
         assert_eq!(
             next_block.hash,

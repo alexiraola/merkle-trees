@@ -51,7 +51,7 @@ impl Blockchain {
             println!(
                 "Built block with hash {}, nonce {}",
                 next_block.hash.to_hex(),
-                next_block.nonce
+                next_block.header.nonce
             );
 
             self.blocks.push(next_block);
@@ -93,7 +93,7 @@ impl Blockchain {
             match previous_hash {
                 None => (),
                 Some(hash) => {
-                    if hash != b.previous_hash.clone() {
+                    if hash != b.header.previous_hash.clone() {
                         return false;
                     }
                 }
