@@ -1,13 +1,14 @@
+use crate::block_header::BlockHeader;
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
 
 #[derive(Debug, Clone, Eq)]
 pub struct Block {
+    pub header: BlockHeader,
     pub hash: Hash,
     pub previous_hash: Hash,
     pub transactions: Vec<String>,
     pub nonce: u32,
-    merkle_tree: MerkleTree,
     timestamp: u32,
 }
 
@@ -25,13 +26,21 @@ impl Block {
             timestamp
         ));
 
+        let header = BlockHeader::new(
+            256,
+            previous_hash.clone(),
+            merkle_tree.hash(),
+            timestamp,
+            0x00000000,
+            nonce,
+        );
+
         Self {
-            // hash: merkle_tree.hash(),
+            header,
             hash,
             previous_hash,
             transactions,
             nonce,
-            merkle_tree,
             timestamp,
         }
     }
