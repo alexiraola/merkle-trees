@@ -1,4 +1,5 @@
 use crate::hash::Hash;
+use std::fmt::Write;
 
 #[derive(Debug, Clone, Eq)]
 pub struct BlockHeader {
@@ -49,6 +50,13 @@ impl BlockHeader {
         bytes[72..76].copy_from_slice(&self.difficulty_target.to_le_bytes());
         bytes[76..80].copy_from_slice(&self.nonce.to_le_bytes());
         bytes
+    }
+
+    pub fn to_bytes_hex(&self) -> String {
+        self.to_bytes().iter().fold(String::new(), |mut output, b| {
+            let _ = write!(output, "{b:02x}");
+            output
+        })
     }
 
     pub fn hash(&self) -> Hash {
@@ -110,6 +118,16 @@ mod tests {
                 0x12, 0xd7, 0x36, 0x47, 0xa6, 0x20, 0xf3, 0x0e, 0xec, 0xa7, 0x46, 0xe7, 0x09, 0x8a,
                 0x80, 0x66, 0x25, 0x5d, 0x03, 0x17, 0x27, 0xf0, 0xc2, 0x09,
             ]
+        );
+    }
+
+    #[test]
+    fn test_serializes_block_header_to_hex() {
+        let block_header = block_header();
+
+        assert_eq!(
+            block_header.to_bytes_hex(),
+            "0000003a79f9b311352c484bb61720ce164d6a5ca88a0af4264e01000000000000000000df2ddb62b3583173ce878a0a2e40773d9f4ef42d12d73647a620f30eeca746e7098a8066255d031727f0c209"
         );
     }
 

@@ -16,7 +16,7 @@ impl Blockchain {
     fn add_block(&mut self, transactions: Vec<String>) {
         let block = match self.blocks.last() {
             None => Block::first(transactions, 0),
-            Some(last_block) => Block::new(Some(last_block.hash.clone()), transactions, 0),
+            Some(last_block) => Block::new(Some(last_block.hash()), transactions, 0),
         };
         self.blocks.push(block);
     }
@@ -43,14 +43,12 @@ impl Blockchain {
 
             let next_block = match self.blocks.last() {
                 None => build_block(None, transactions, difficulty),
-                Some(last_block) => {
-                    build_block(Some(last_block.hash.clone()), transactions, difficulty)
-                }
+                Some(last_block) => build_block(Some(last_block.hash()), transactions, difficulty),
             };
 
             println!(
                 "Built block with hash {}, nonce {}",
-                next_block.hash.to_hex(),
+                next_block.hash().to_hex(),
                 next_block.header.nonce
             );
 
@@ -84,7 +82,7 @@ impl Blockchain {
     }
 
     fn hash(&self) -> Option<Hash> {
-        self.blocks.last().map(|b| b.hash.clone())
+        self.blocks.last().map(|b| b.hash())
     }
 
     fn verify(&self) -> bool {
@@ -98,7 +96,7 @@ impl Blockchain {
                     }
                 }
             }
-            previous_hash = Some(b.hash.clone());
+            previous_hash = Some(b.hash());
         }
         true
     }
@@ -106,6 +104,8 @@ impl Blockchain {
 
 #[cfg(test)]
 mod tests {
+    use rand::rand_core::block;
+
     use super::*;
 
     #[test]
@@ -128,9 +128,9 @@ mod tests {
             0,
         );
 
-        blockchain.add_block(genesis.transactions);
+        blockchain.add_block(genesis.transactions.clone());
 
-        assert_eq!(blockchain.hash(), Some(genesis.hash));
+        assert_eq!(blockchain.hash(), Some(genesis.hash()));
     }
     #[test]
     fn test_adds_two_blocks() {
@@ -151,7 +151,7 @@ mod tests {
 
         assert_eq!(
             blockchain.hash().unwrap().to_hex(),
-            "65c751e21d19d8c6c1118b3032a669fc9b721b7810d18b26b1b47dbd1f941488"
+            "0c9713b3c13b1301c5f108c27926aaa85fa4b2ddefca76e206916384de9c2811"
         );
     }
 

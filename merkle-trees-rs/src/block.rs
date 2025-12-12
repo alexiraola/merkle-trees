@@ -5,7 +5,6 @@ use crate::merkle::MerkleTree;
 #[derive(Debug, Clone, Eq)]
 pub struct Block {
     pub header: BlockHeader,
-    pub hash: Hash,
     pub transactions: Vec<String>,
 }
 
@@ -14,14 +13,6 @@ impl Block {
         let merkle_tree = MerkleTree::new(transactions.clone());
         let timestamp = 0;
         let previous_hash = previous_hash.unwrap_or_default();
-
-        let hash = Hash::from_str(&format!(
-            "{}{}{}{}",
-            merkle_tree.hash(),
-            previous_hash.clone(),
-            nonce,
-            timestamp
-        ));
 
         let header = BlockHeader::new(
             256,
@@ -34,9 +25,12 @@ impl Block {
 
         Self {
             header,
-            hash,
             transactions,
         }
+    }
+
+    pub fn hash(&self) -> Hash {
+        self.header.hash()
     }
 
     pub fn first(transactions: Vec<String>, nonce: u32) -> Self {
@@ -46,7 +40,7 @@ impl Block {
 
 impl PartialEq for Block {
     fn eq(&self, other: &Self) -> bool {
-        self.hash == other.hash
+        self.hash() == other.hash()
     }
 }
 
@@ -66,8 +60,8 @@ mod tests {
 
         assert_eq!(block.header.previous_hash, Hash::default());
         assert_eq!(
-            block.hash,
-            "13f349812c3129e764236036562c3ade6d5c7f6c5f3f70fa7c94d8cdd6daca5f"
+            block.hash(),
+            "84c32ec45ffb02449c58ddc80c8b58e51da1d5b630f0e18dfc63ac5983e16139"
         );
     }
 
@@ -84,7 +78,7 @@ mod tests {
         );
 
         let next_block = Block::new(
-            Some(genesis.hash.clone()),
+            Some(genesis.hash().clone()),
             vec![
                 "Tx5".to_string(),
                 "Tx6".to_string(),
@@ -94,11 +88,11 @@ mod tests {
             0,
         );
 
-        assert_eq!(next_block.header.previous_hash, genesis.hash);
+        assert_eq!(next_block.header.previous_hash, genesis.hash());
         assert_eq!(next_block.header.timestamp, 0);
         assert_eq!(
-            next_block.hash,
-            "65c751e21d19d8c6c1118b3032a669fc9b721b7810d18b26b1b47dbd1f941488"
+            next_block.hash(),
+            "0c9713b3c13b1301c5f108c27926aaa85fa4b2ddefca76e206916384de9c2811"
         );
     }
 

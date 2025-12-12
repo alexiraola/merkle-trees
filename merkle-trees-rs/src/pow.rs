@@ -10,7 +10,7 @@ pub fn build_block(
     let mut nonce = 0;
     let mut block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
 
-    while !block.hash.to_hex().starts_with(&prefix) {
+    while !block.hash().to_hex().starts_with(&prefix) {
         nonce = rand::random_range(0..u32::MAX);
         block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
     }
@@ -58,6 +58,6 @@ mod tests {
         let transactions = vec!["Tx1".to_string(), "Tx2".to_string(), "Tx3".to_string()];
         let difficulty = 2;
         let block = build_block(None, transactions.clone(), difficulty);
-        assert!(block.hash.to_hex().starts_with("00"));
+        assert!(block.hash().to_hex().starts_with("00"));
     }
 }
