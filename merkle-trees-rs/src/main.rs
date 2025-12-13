@@ -1,3 +1,4 @@
+mod bits;
 mod block;
 mod block_header;
 mod blockchain;
