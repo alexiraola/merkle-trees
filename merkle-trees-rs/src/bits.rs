@@ -1,5 +1,6 @@
 use crate::hash::Hash;
 
+#[derive(Debug, Clone, Eq)]
 pub struct Bits {
     pub exponent: u8,
     pub coefficient: u32,
@@ -15,8 +16,8 @@ impl Bits {
 
     pub fn to_bytes(&self) -> [u8; 4] {
         let mut bytes = [0u8; 4];
-        bytes[0] = self.exponent;
-        bytes[1..4].copy_from_slice(&self.coefficient.to_le_bytes()[0..3]);
+        bytes[0..3].copy_from_slice(&self.coefficient.to_le_bytes()[0..3]);
+        bytes[3] = self.exponent;
         bytes
     }
 
@@ -32,6 +33,12 @@ impl Bits {
         hash_be.reverse();
 
         hash_be < self.target()
+    }
+}
+
+impl PartialEq for Bits {
+    fn eq(&self, other: &Self) -> bool {
+        self.exponent == other.exponent && self.coefficient == other.coefficient
     }
 }
 
@@ -61,7 +68,7 @@ mod tests {
     fn test_serializes_to_bytes() {
         let bits = Bits::new(0x17, 0x255d03);
 
-        assert_eq!(bits.to_bytes(), [0x17, 0x03, 0x5d, 0x25]);
+        assert_eq!(bits.to_bytes(), [0x03, 0x5d, 0x25, 0x17]);
     }
 
     #[test]

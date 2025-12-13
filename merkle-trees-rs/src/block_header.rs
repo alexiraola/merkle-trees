@@ -1,4 +1,4 @@
-use crate::{hash::Hash, timestamp::Timestamp};
+use crate::{bits::Bits, hash::Hash, timestamp::Timestamp};
 use std::fmt::Write;
 
 #[derive(Debug, Clone, Eq)]
@@ -7,7 +7,7 @@ pub struct BlockHeader {
     pub previous_hash: Hash,
     pub merkle_root: Hash,
     pub timestamp: Timestamp,
-    pub difficulty_target: u32,
+    pub difficulty_target: Bits,
     pub nonce: u32,
 }
 
@@ -25,7 +25,10 @@ impl BlockHeader {
             previous_hash,
             merkle_root,
             timestamp: timestamp.unwrap_or_default(),
-            difficulty_target,
+            difficulty_target: Bits::new(
+                ((difficulty_target >> 24) & 0xff) as u8,
+                difficulty_target,
+            ),
             nonce,
         }
     }
@@ -36,7 +39,7 @@ impl BlockHeader {
         bytes[4..36].copy_from_slice(&self.previous_hash.to_bytes());
         bytes[36..68].copy_from_slice(&self.merkle_root.to_bytes());
         bytes[68..72].copy_from_slice(&self.timestamp.to_bytes());
-        bytes[72..76].copy_from_slice(&self.difficulty_target.to_le_bytes());
+        bytes[72..76].copy_from_slice(&self.difficulty_target.to_bytes());
         bytes[76..80].copy_from_slice(&self.nonce.to_le_bytes());
         bytes
     }
@@ -100,7 +103,7 @@ mod tests {
                 previous_hash: Hash::default(),
                 merkle_root: Hash::default(),
                 timestamp: Timestamp::new(0),
-                difficulty_target: 0,
+                difficulty_target: Bits::new(0x00, 0x000000),
                 nonce: 0,
             }
         );
