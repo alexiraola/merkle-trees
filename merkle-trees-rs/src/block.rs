@@ -1,3 +1,4 @@
+use crate::bits::DifficultyTarget;
 use crate::block_header::BlockHeader;
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
@@ -23,7 +24,7 @@ impl Block {
             previous_hash.unwrap_or_default(),
             merkle_tree.hash(),
             timestamp,
-            0x00000000,
+            DifficultyTarget::new(0x00, 0x00),
             nonce,
         );
 

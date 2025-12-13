@@ -1,4 +1,4 @@
-use crate::{bits::Bits, hash::Hash, timestamp::Timestamp};
+use crate::{bits::DifficultyTarget, hash::Hash, timestamp::Timestamp};
 use std::fmt::Write;
 
 #[derive(Debug, Clone, Eq)]
@@ -7,7 +7,7 @@ pub struct BlockHeader {
     pub previous_hash: Hash,
     pub merkle_root: Hash,
     pub timestamp: Timestamp,
-    pub difficulty_target: Bits,
+    pub difficulty_target: DifficultyTarget,
     pub nonce: u32,
 }
 
@@ -17,7 +17,7 @@ impl BlockHeader {
         previous_hash: Hash,
         merkle_root: Hash,
         timestamp: Option<Timestamp>,
-        difficulty_target: u32,
+        difficulty_target: DifficultyTarget,
         nonce: u32,
     ) -> Self {
         Self {
@@ -25,10 +25,7 @@ impl BlockHeader {
             previous_hash,
             merkle_root,
             timestamp: timestamp.unwrap_or_default(),
-            difficulty_target: Bits::new(
-                ((difficulty_target >> 24) & 0xff) as u8,
-                difficulty_target,
-            ),
+            difficulty_target,
             nonce,
         }
     }
@@ -80,7 +77,7 @@ mod tests {
                 0xec, 0xa7, 0x46, 0xe7,
             ]),
             Some(Timestamp::new(0x66808a09)),
-            0x17035d25,
+            DifficultyTarget::new(0x17, 0x035d25),
             0x09c2f027,
         )
     }
@@ -92,7 +89,7 @@ mod tests {
             Hash::default(),
             Hash::default(),
             Some(Timestamp::new(0)),
-            0,
+            DifficultyTarget::new(0x00, 0x00),
             0,
         );
 
@@ -103,7 +100,7 @@ mod tests {
                 previous_hash: Hash::default(),
                 merkle_root: Hash::default(),
                 timestamp: Timestamp::new(0),
-                difficulty_target: Bits::new(0x00, 0x000000),
+                difficulty_target: DifficultyTarget::new(0x00, 0x000000),
                 nonce: 0,
             }
         );
@@ -170,7 +167,7 @@ mod tests {
                 0xec, 0xa7, 0x46, 0xe7,
             ]),
             Some(Timestamp::new(0x66808a09)),
-            0x17035d25,
+            DifficultyTarget::new(0x17, 0x035d25),
             0x09c2f027,
         );
 
