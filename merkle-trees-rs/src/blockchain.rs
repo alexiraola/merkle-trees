@@ -3,6 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::block::Block;
 use crate::hash::Hash;
 use crate::pow::build_block;
+use crate::timestamp::Timestamp;
 
 pub struct Blockchain {
     blocks: Vec<Block>,
@@ -13,10 +14,10 @@ impl Blockchain {
         Blockchain { blocks: vec![] }
     }
 
-    fn add_block(&mut self, transactions: Vec<String>) {
+    fn add_block(&mut self, transactions: Vec<String>, timestamp: Option<Timestamp>) {
         let block = match self.blocks.last() {
-            None => Block::genesis(transactions, 0),
-            Some(last_block) => Block::new(Some(last_block.hash()), transactions, 0),
+            None => Block::genesis(transactions, Some(Timestamp::new(0)), 0),
+            Some(last_block) => Block::new(Some(last_block.hash()), transactions, timestamp, 0),
         };
         self.blocks.push(block);
     }
@@ -74,7 +75,7 @@ impl Blockchain {
     }
 
     fn replace_genesis(&mut self, transactions: Vec<String>) {
-        let block = Block::genesis(transactions, 0);
+        let block = Block::genesis(transactions, Some(Timestamp::new(0)), 0);
         match self.blocks.first() {
             None => self.blocks.push(block),
             Some(_) => self.blocks[0] = block,
@@ -125,10 +126,11 @@ mod tests {
                 "Tx3".to_string(),
                 "Tx4".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 
-        blockchain.add_block(genesis.transactions.clone());
+        blockchain.add_block(genesis.transactions.clone(), Some(Timestamp::new(0)));
 
         assert_eq!(blockchain.hash(), Some(genesis.hash()));
     }
@@ -136,18 +138,24 @@ mod tests {
     fn test_adds_two_blocks() {
         let mut blockchain = Blockchain::new();
 
-        blockchain.add_block(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
-        blockchain.add_block(vec![
-            "Tx5".to_string(),
-            "Tx6".to_string(),
-            "Tx7".to_string(),
-            "Tx8".to_string(),
-        ]);
+        blockchain.add_block(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
+        blockchain.add_block(
+            vec![
+                "Tx5".to_string(),
+                "Tx6".to_string(),
+                "Tx7".to_string(),
+                "Tx8".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
 
         assert_eq!(
             blockchain.hash().unwrap().to_hex(),
@@ -159,24 +167,33 @@ mod tests {
     fn test_verifies_chain_validity() {
         let mut blockchain = Blockchain::new();
 
-        blockchain.add_block(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
-        blockchain.add_block(vec![
-            "Tx5".to_string(),
-            "Tx6".to_string(),
-            "Tx7".to_string(),
-            "Tx8".to_string(),
-        ]);
-        blockchain.add_block(vec![
-            "Tx9".to_string(),
-            "Tx10".to_string(),
-            "Tx11".to_string(),
-            "Tx12".to_string(),
-        ]);
+        blockchain.add_block(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
+        blockchain.add_block(
+            vec![
+                "Tx5".to_string(),
+                "Tx6".to_string(),
+                "Tx7".to_string(),
+                "Tx8".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
+        blockchain.add_block(
+            vec![
+                "Tx9".to_string(),
+                "Tx10".to_string(),
+                "Tx11".to_string(),
+                "Tx12".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
 
         assert!(blockchain.verify());
     }
@@ -185,24 +202,33 @@ mod tests {
     fn test_does_not_verify_invalid_chain() {
         let mut blockchain = Blockchain::new();
 
-        blockchain.add_block(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ]);
-        blockchain.add_block(vec![
-            "Tx5".to_string(),
-            "Tx6".to_string(),
-            "Tx7".to_string(),
-            "Tx8".to_string(),
-        ]);
-        blockchain.add_block(vec![
-            "Tx9".to_string(),
-            "Tx10".to_string(),
-            "Tx11".to_string(),
-            "Tx12".to_string(),
-        ]);
+        blockchain.add_block(
+            vec![
+                "Tx1".to_string(),
+                "Tx2".to_string(),
+                "Tx3".to_string(),
+                "Tx4".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
+        blockchain.add_block(
+            vec![
+                "Tx5".to_string(),
+                "Tx6".to_string(),
+                "Tx7".to_string(),
+                "Tx8".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
+        blockchain.add_block(
+            vec![
+                "Tx9".to_string(),
+                "Tx10".to_string(),
+                "Tx11".to_string(),
+                "Tx12".to_string(),
+            ],
+            Some(Timestamp::new(0)),
+        );
 
         blockchain.replace_genesis(vec![
             "Tx1".to_string(),

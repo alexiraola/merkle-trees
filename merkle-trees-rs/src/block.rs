@@ -1,6 +1,7 @@
 use crate::block_header::BlockHeader;
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
+use crate::timestamp::Timestamp;
 
 #[derive(Debug, Clone, Eq)]
 pub struct Block {
@@ -9,9 +10,13 @@ pub struct Block {
 }
 
 impl Block {
-    pub fn new(previous_hash: Option<Hash>, transactions: Vec<String>, nonce: u32) -> Self {
+    pub fn new(
+        previous_hash: Option<Hash>,
+        transactions: Vec<String>,
+        timestamp: Option<Timestamp>,
+        nonce: u32,
+    ) -> Self {
         let merkle_tree = MerkleTree::new(transactions.clone());
-        let timestamp = 0;
 
         let header = BlockHeader::new(
             256,
@@ -32,8 +37,8 @@ impl Block {
         self.header.hash()
     }
 
-    pub fn genesis(transactions: Vec<String>, nonce: u32) -> Self {
-        Self::new(None, transactions, nonce)
+    pub fn genesis(transactions: Vec<String>, timestamp: Option<Timestamp>, nonce: u32) -> Self {
+        Self::new(None, transactions, timestamp, nonce)
     }
 }
 
@@ -55,7 +60,7 @@ mod tests {
             "Tx3".to_string(),
             "Tx4".to_string(),
         ];
-        let block = Block::genesis(transactions, 0);
+        let block = Block::genesis(transactions, Some(Timestamp::new(0)), 0);
 
         assert_eq!(block.header.previous_hash, Hash::default());
         assert_eq!(
@@ -73,6 +78,7 @@ mod tests {
                 "Tx3".to_string(),
                 "Tx4".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 
@@ -84,11 +90,12 @@ mod tests {
                 "Tx7".to_string(),
                 "Tx8".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 
         assert_eq!(next_block.header.previous_hash, genesis.hash());
-        assert_eq!(next_block.header.timestamp, 0);
+        assert_eq!(next_block.header.timestamp, Timestamp::new(0));
         assert_eq!(
             next_block.hash(),
             "0c9713b3c13b1301c5f108c27926aaa85fa4b2ddefca76e206916384de9c2811"
@@ -104,6 +111,7 @@ mod tests {
                 "Tx3".to_string(),
                 "Tx4".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 
@@ -114,6 +122,7 @@ mod tests {
                 "Tx3".to_string(),
                 "Tx4".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 
@@ -129,6 +138,7 @@ mod tests {
                 "Tx3".to_string(),
                 "Tx4".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 
@@ -139,6 +149,7 @@ mod tests {
                 "Tx3".to_string(),
                 "Tx5".to_string(),
             ],
+            Some(Timestamp::new(0)),
             0,
         );
 

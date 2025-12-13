@@ -1,4 +1,4 @@
-use crate::hash::Hash;
+use crate::{hash::Hash, timestamp::Timestamp};
 use std::fmt::Write;
 
 #[derive(Debug, Clone, Eq)]
@@ -6,7 +6,7 @@ pub struct BlockHeader {
     pub version: i32,
     pub previous_hash: Hash,
     pub merkle_root: Hash,
-    pub timestamp: u32,
+    pub timestamp: Timestamp,
     pub difficulty_target: u32,
     pub nonce: u32,
 }
@@ -27,7 +27,7 @@ impl BlockHeader {
         version: i32,
         previous_hash: Hash,
         merkle_root: Hash,
-        timestamp: u32,
+        timestamp: Option<Timestamp>,
         difficulty_target: u32,
         nonce: u32,
     ) -> Self {
@@ -35,7 +35,7 @@ impl BlockHeader {
             version,
             previous_hash,
             merkle_root,
-            timestamp,
+            timestamp: timestamp.unwrap_or_default(),
             difficulty_target,
             nonce,
         }
@@ -46,7 +46,7 @@ impl BlockHeader {
         bytes[0..4].copy_from_slice(&self.version.to_le_bytes());
         bytes[4..36].copy_from_slice(&self.previous_hash.to_bytes());
         bytes[36..68].copy_from_slice(&self.merkle_root.to_bytes());
-        bytes[68..72].copy_from_slice(&self.timestamp.to_le_bytes());
+        bytes[68..72].copy_from_slice(&self.timestamp.to_bytes());
         bytes[72..76].copy_from_slice(&self.difficulty_target.to_le_bytes());
         bytes[76..80].copy_from_slice(&self.nonce.to_le_bytes());
         bytes
@@ -81,7 +81,7 @@ mod tests {
                 0x77, 0x3d, 0x9f, 0x4e, 0xf4, 0x2d, 0x12, 0xd7, 0x36, 0x47, 0xa6, 0x20, 0xf3, 0x0e,
                 0xec, 0xa7, 0x46, 0xe7,
             ]),
-            0x66808a09,
+            Some(Timestamp::new(0x66808a09)),
             0x17035d25,
             0x09c2f027,
         )
@@ -89,7 +89,14 @@ mod tests {
 
     #[test]
     fn test_creates_block_header() {
-        let block_header = BlockHeader::new(0x00000100, Hash::default(), Hash::default(), 0, 0, 0);
+        let block_header = BlockHeader::new(
+            0x00000100,
+            Hash::default(),
+            Hash::default(),
+            Some(Timestamp::new(0)),
+            0,
+            0,
+        );
 
         assert_eq!(
             block_header,
@@ -97,7 +104,7 @@ mod tests {
                 version: 256,
                 previous_hash: Hash::default(),
                 merkle_root: Hash::default(),
-                timestamp: 0,
+                timestamp: Timestamp::new(0),
                 difficulty_target: 0,
                 nonce: 0,
             }

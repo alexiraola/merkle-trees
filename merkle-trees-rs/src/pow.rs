@@ -1,5 +1,6 @@
 use crate::block::Block;
 use crate::hash;
+use crate::timestamp::Timestamp;
 
 pub fn build_block(
     previous_hash: Option<hash::Hash>,
@@ -8,11 +9,21 @@ pub fn build_block(
 ) -> Block {
     let prefix = build_prefix(difficulty);
     let mut nonce = 0;
-    let mut block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
+    let mut block = Block::new(
+        previous_hash.clone(),
+        transactions.clone(),
+        Some(Timestamp::new(0)),
+        nonce,
+    );
 
     while !block.hash().to_hex().starts_with(&prefix) {
         nonce = rand::random_range(0..u32::MAX);
-        block = Block::new(previous_hash.clone(), transactions.clone(), nonce);
+        block = Block::new(
+            previous_hash.clone(),
+            transactions.clone(),
+            Some(Timestamp::new(0)),
+            nonce,
+        );
     }
     block.clone()
 }

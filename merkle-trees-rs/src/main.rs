@@ -5,6 +5,7 @@ mod hash;
 mod merkle;
 mod pos;
 mod pow;
+mod timestamp;
 
 fn main() {
     let mut blockchain = blockchain::Blockchain::new();
