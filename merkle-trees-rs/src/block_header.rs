@@ -11,17 +11,6 @@ pub struct BlockHeader {
     pub nonce: u32,
 }
 
-impl PartialEq for BlockHeader {
-    fn eq(&self, other: &Self) -> bool {
-        self.version == other.version
-            && self.previous_hash == other.previous_hash
-            && self.merkle_root == other.merkle_root
-            && self.timestamp == other.timestamp
-            && self.difficulty_target == other.difficulty_target
-            && self.nonce == other.nonce
-    }
-}
-
 impl BlockHeader {
     pub fn new(
         version: i32,
@@ -61,6 +50,12 @@ impl BlockHeader {
 
     pub fn hash(&self) -> Hash {
         Hash::from_bytes(&Hash::from_bytes(&self.to_bytes()).to_bytes())
+    }
+}
+
+impl PartialEq for BlockHeader {
+    fn eq(&self, other: &Self) -> bool {
+        self.hash() == other.hash()
     }
 }
 
@@ -146,5 +141,36 @@ mod tests {
             block_header.hash(),
             "d2fd965841244f029e5b8ffce0536951a117cbaad65f00000000000000000000"
         );
+    }
+
+    #[test]
+    fn test_headers_with_same_properties_are_equal() {
+        let block_header1 = block_header();
+        let block_header2 = block_header();
+
+        assert_eq!(block_header1, block_header2);
+    }
+
+    #[test]
+    fn test_headers_with_different_properties_are_not_equal() {
+        let block_header1 = block_header();
+        let block_header2 = BlockHeader::new(
+            0x3b000000,
+            Hash::new([
+                0x79, 0xf9, 0xb3, 0x11, 0x35, 0x2c, 0x48, 0x4b, 0xb6, 0x17, 0x20, 0xce, 0x16, 0x4d,
+                0x6a, 0x5c, 0xa8, 0x8a, 0x0a, 0xf4, 0x26, 0x4e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+            ]),
+            Hash::new([
+                0xdf, 0x2d, 0xdb, 0x62, 0xb3, 0x58, 0x31, 0x73, 0xce, 0x87, 0x8a, 0x0a, 0x2e, 0x40,
+                0x77, 0x3d, 0x9f, 0x4e, 0xf4, 0x2d, 0x12, 0xd7, 0x36, 0x47, 0xa6, 0x20, 0xf3, 0x0e,
+                0xec, 0xa7, 0x46, 0xe7,
+            ]),
+            Some(Timestamp::new(0x66808a09)),
+            0x17035d25,
+            0x09c2f027,
+        );
+
+        assert_ne!(block_header1, block_header2);
     }
 }
