@@ -1,4 +1,3 @@
-mod bits;
 mod block;
 mod blockchain;
 mod hash;

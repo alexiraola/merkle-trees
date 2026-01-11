@@ -1,4 +1,4 @@
-use crate::{bits::DifficultyTarget, hash::Hash, timestamp::Timestamp};
+use crate::{block::bits::DifficultyTarget, hash::Hash, timestamp::Timestamp};
 use std::fmt::Write;
 
 #[derive(Debug, Clone, Eq)]

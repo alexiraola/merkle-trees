@@ -1,6 +1,8 @@
+mod bits;
 mod header;
 
-use crate::bits::DifficultyTarget;
+pub use bits::DifficultyTarget;
+
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
 use crate::timestamp::Timestamp;
