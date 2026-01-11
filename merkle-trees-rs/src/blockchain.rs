@@ -105,8 +105,6 @@ impl Blockchain {
 
 #[cfg(test)]
 mod tests {
-    use rand::rand_core::block;
-
     use super::*;
 
     #[test]

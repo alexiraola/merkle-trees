@@ -1,6 +1,5 @@
 mod bits;
 mod block;
-mod block_header;
 mod blockchain;
 mod hash;
 mod merkle;

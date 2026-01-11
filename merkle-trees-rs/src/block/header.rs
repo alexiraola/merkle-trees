@@ -2,17 +2,17 @@ use crate::{bits::DifficultyTarget, hash::Hash, timestamp::Timestamp};
 use std::fmt::Write;
 
 #[derive(Debug, Clone, Eq)]
-pub struct BlockHeader {
-    pub version: i32,
-    pub previous_hash: Hash,
-    pub merkle_root: Hash,
-    pub timestamp: Timestamp,
-    pub difficulty_target: DifficultyTarget,
-    pub nonce: u32,
+pub(crate) struct BlockHeader {
+    pub(crate) version: i32,
+    pub(crate) previous_hash: Hash,
+    pub(crate) merkle_root: Hash,
+    pub(crate) timestamp: Timestamp,
+    pub(crate) difficulty_target: DifficultyTarget,
+    pub(crate) nonce: u32,
 }
 
 impl BlockHeader {
-    pub fn new(
+    pub(crate) fn new(
         version: i32,
         previous_hash: Hash,
         merkle_root: Hash,
@@ -30,7 +30,7 @@ impl BlockHeader {
         }
     }
 
-    pub fn to_bytes(&self) -> [u8; 80] {
+    pub(crate) fn to_bytes(&self) -> [u8; 80] {
         let mut bytes = [0u8; 80];
         bytes[0..4].copy_from_slice(&self.version.to_le_bytes());
         bytes[4..36].copy_from_slice(&self.previous_hash.to_bytes());
@@ -41,14 +41,14 @@ impl BlockHeader {
         bytes
     }
 
-    pub fn to_bytes_hex(&self) -> String {
+    pub(crate) fn to_bytes_hex(&self) -> String {
         self.to_bytes().iter().fold(String::new(), |mut output, b| {
             let _ = write!(output, "{b:02x}");
             output
         })
     }
 
-    pub fn hash(&self) -> Hash {
+    pub(crate) fn hash(&self) -> Hash {
         Hash::from_bytes(&Hash::from_bytes(&self.to_bytes()).to_bytes())
     }
 }

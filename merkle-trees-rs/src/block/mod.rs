@@ -1,8 +1,10 @@
+mod header;
+
 use crate::bits::DifficultyTarget;
-use crate::block_header::BlockHeader;
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
 use crate::timestamp::Timestamp;
+use header::BlockHeader;
 
 #[derive(Debug, Clone, Eq)]
 pub struct Block {
