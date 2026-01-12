@@ -4,6 +4,7 @@ use crate::block::Block;
 use crate::hash::Hash;
 use crate::pow::build_block;
 use crate::timestamp::Timestamp;
+use crate::transaction::Transaction;
 
 pub struct Blockchain {
     blocks: Vec<Block>,
@@ -14,7 +15,7 @@ impl Blockchain {
         Blockchain { blocks: vec![] }
     }
 
-    fn add_block(&mut self, transactions: Vec<String>, timestamp: Option<Timestamp>) {
+    fn add_block(&mut self, transactions: Vec<Transaction>, timestamp: Option<Timestamp>) {
         let block = match self.blocks.last() {
             None => Block::genesis(transactions, Some(Timestamp::new(0)), 0),
             Some(last_block) => Block::new(Some(last_block.hash()), transactions, timestamp, 0),
@@ -33,7 +34,15 @@ impl Blockchain {
 
         while self.blocks.len() < 2016 {
             let transactions = (self.blocks.len()..self.blocks.len() + 4)
-                .map(|i| format!("Tx{}", i).to_string())
+                .map(|i| {
+                    Transaction::new(
+                        1,
+                        format!("user{}", i),
+                        format!("user{}", i + 1),
+                        (i * 1000) as u64,
+                        Some(Timestamp::new(i as u32)),
+                    )
+                })
                 .collect();
 
             println!(
@@ -74,7 +83,7 @@ impl Blockchain {
         }
     }
 
-    fn replace_genesis(&mut self, transactions: Vec<String>) {
+    fn replace_genesis(&mut self, transactions: Vec<Transaction>) {
         let block = Block::genesis(transactions, Some(Timestamp::new(0)), 0);
         match self.blocks.first() {
             None => self.blocks.push(block),
@@ -107,6 +116,20 @@ impl Blockchain {
 mod tests {
     use super::*;
 
+    fn create_test_transactions(start: usize) -> Vec<Transaction> {
+        (0..4)
+            .map(|i| {
+                Transaction::new(
+                    1,
+                    format!("user{}", start + i),
+                    format!("user{}", start + i + 1),
+                    ((start + i) * 1000) as u64,
+                    Some(Timestamp::new(0)),
+                )
+            })
+            .collect()
+    }
+
     #[test]
     fn test_creates_blockchain() {
         let blockchain = Blockchain::new();
@@ -117,47 +140,24 @@ mod tests {
     #[test]
     fn test_adds_a_block() {
         let mut blockchain = Blockchain::new();
-        let genesis = Block::genesis(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-            0,
-        );
+        let transactions = create_test_transactions(0);
+        let genesis = Block::genesis(transactions.clone(), Some(Timestamp::new(0)), 0);
 
-        blockchain.add_block(genesis.transactions.clone(), Some(Timestamp::new(0)));
+        blockchain.add_block(transactions, Some(Timestamp::new(0)));
 
         assert_eq!(blockchain.hash(), Some(genesis.hash()));
     }
+
     #[test]
     fn test_adds_two_blocks() {
         let mut blockchain = Blockchain::new();
 
-        blockchain.add_block(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
-        blockchain.add_block(
-            vec![
-                "Tx5".to_string(),
-                "Tx6".to_string(),
-                "Tx7".to_string(),
-                "Tx8".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
+        blockchain.add_block(create_test_transactions(0), Some(Timestamp::new(0)));
+        blockchain.add_block(create_test_transactions(4), Some(Timestamp::new(0)));
 
         assert_eq!(
             blockchain.hash().unwrap().to_hex(),
-            "0c9713b3c13b1301c5f108c27926aaa85fa4b2ddefca76e206916384de9c2811"
+            "84ab7bfda2fc21d9cd737af4cb29cd745f495d59a05e292d30f71064971c85da"
         );
     }
 
@@ -165,33 +165,9 @@ mod tests {
     fn test_verifies_chain_validity() {
         let mut blockchain = Blockchain::new();
 
-        blockchain.add_block(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
-        blockchain.add_block(
-            vec![
-                "Tx5".to_string(),
-                "Tx6".to_string(),
-                "Tx7".to_string(),
-                "Tx8".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
-        blockchain.add_block(
-            vec![
-                "Tx9".to_string(),
-                "Tx10".to_string(),
-                "Tx11".to_string(),
-                "Tx12".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
+        blockchain.add_block(create_test_transactions(0), Some(Timestamp::new(0)));
+        blockchain.add_block(create_test_transactions(4), Some(Timestamp::new(0)));
+        blockchain.add_block(create_test_transactions(8), Some(Timestamp::new(0)));
 
         assert!(blockchain.verify());
     }
@@ -200,40 +176,10 @@ mod tests {
     fn test_does_not_verify_invalid_chain() {
         let mut blockchain = Blockchain::new();
 
-        blockchain.add_block(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
-        blockchain.add_block(
-            vec![
-                "Tx5".to_string(),
-                "Tx6".to_string(),
-                "Tx7".to_string(),
-                "Tx8".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
-        blockchain.add_block(
-            vec![
-                "Tx9".to_string(),
-                "Tx10".to_string(),
-                "Tx11".to_string(),
-                "Tx12".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-        );
-
-        blockchain.replace_genesis(vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx5".to_string(),
-        ]);
+        blockchain.add_block(create_test_transactions(0), Some(Timestamp::new(0)));
+        blockchain.add_block(create_test_transactions(4), Some(Timestamp::new(0)));
+        blockchain.add_block(create_test_transactions(8), Some(Timestamp::new(0)));
+        blockchain.replace_genesis(create_test_transactions(12));
 
         assert!(!blockchain.verify());
     }

@@ -1,10 +1,11 @@
 use crate::block::Block;
 use crate::hash;
 use crate::timestamp::Timestamp;
+use crate::transaction::Transaction;
 
 pub fn build_block(
     previous_hash: Option<hash::Hash>,
-    transactions: Vec<String>,
+    transactions: Vec<Transaction>,
     difficulty: usize,
 ) -> Block {
     let prefix = build_prefix(difficulty);
@@ -66,7 +67,11 @@ mod tests {
 
     #[test]
     fn test_build_block_with_difficulty() {
-        let transactions = vec!["Tx1".to_string(), "Tx2".to_string(), "Tx3".to_string()];
+        let transactions = vec![
+            Transaction::new(1, "alice".to_string(), "bob".to_string(), 1000, None),
+            Transaction::new(1, "bob".to_string(), "charlie".to_string(), 500, None),
+            Transaction::coinbase("miner".to_string(), 5000000, None),
+        ];
         let difficulty = 2;
         let block = build_block(None, transactions.clone(), difficulty);
         assert!(block.hash().to_hex().starts_with("00"));

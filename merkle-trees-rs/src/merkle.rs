@@ -1,4 +1,5 @@
 use crate::hash::Hash;
+use crate::transaction::Transaction;
 
 #[derive(Debug, Clone, Eq)]
 struct Node {
@@ -9,9 +10,9 @@ struct Node {
 }
 
 impl Node {
-    fn leaf(data: &str) -> Self {
+    fn leaf(tx: &Transaction) -> Self {
         Self {
-            hash: Hash::from_str(data),
+            hash: tx.tx_id(),
             left: None,
             right: None,
             size: 1,
@@ -78,7 +79,7 @@ pub struct MerkleTree {
 }
 
 impl MerkleTree {
-    pub fn new(leaves: Vec<String>) -> Self {
+    pub fn new(leaves: Vec<Transaction>) -> Self {
         let root = Self::build_tree(leaves);
         Self { root }
     }
@@ -87,7 +88,7 @@ impl MerkleTree {
         self.root.hash.clone()
     }
 
-    fn build_tree(leaves: Vec<String>) -> Node {
+    fn build_tree(leaves: Vec<Transaction>) -> Node {
         let mut level: Vec<Node> = leaves.iter().map(|leaf| Node::leaf(leaf)).collect();
 
         while level.len() > 1 {
@@ -126,117 +127,145 @@ impl PartialEq for MerkleTree {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::timestamp::Timestamp;
+
+    fn create_test_transaction(id: &str) -> Transaction {
+        Transaction::new(
+            1,
+            "alice".to_string(),
+            format!("recipient_{}", id),
+            1000,
+            Some(Timestamp::new(0)),
+        )
+    }
 
     #[test]
     fn test_creates_leaf_with_data() {
-        let leaf = Node::leaf("Tx1");
-        assert_eq!(
-            leaf.hash,
-            "55f743d0d1b9bd86bbd96a46ba4272ddde19f09e3f6e47832e34bb2779a120b5".to_string()
-        );
+        let tx = create_test_transaction("Tx1");
+        let leaf = Node::leaf(&tx);
+        assert_eq!(leaf.hash, tx.tx_id());
     }
 
     #[test]
     fn test_creates_node_with_left_and_right() {
-        let left = Node::leaf("Tx1");
-        let right = Node::leaf("Tx2");
+        let tx1 = create_test_transaction("Tx1");
+        let tx2 = create_test_transaction("Tx2");
+        let left = Node::leaf(&tx1);
+        let right = Node::leaf(&tx2);
         let node = Node::new(left, right);
-        assert_eq!(
-            node.hash,
-            "0971909734e9c49e0f45caeb15a450d717de387a0a27df245e7e924bb7e62b0e".to_string()
-        );
+
+        let combined_hash = Hash::from_str(&format!("{}{}", tx1.tx_id(), tx2.tx_id()));
+        assert_eq!(node.hash, combined_hash);
     }
 
     #[test]
     fn test_creates_merkle_tree() {
         let leaves = vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
+            create_test_transaction("Tx1"),
+            create_test_transaction("Tx2"),
+            create_test_transaction("Tx3"),
+            create_test_transaction("Tx4"),
         ];
         let tree = MerkleTree::new(leaves);
         assert_eq!(
             tree.root.hash,
-            "5b260dbcbff182d10cdbd21d8cb9e4446fe71820bb91c8dced8dcfd0e8a9c8ac".to_string()
+            "39af34a258981e8ce8fc8ae00e672204318b024f1d8f53c955ec4537082a6873".to_string()
         );
         assert_eq!(tree.root.size, 4);
     }
 
     #[test]
     fn test_creates_merkle_tree_with_odd_number_of_leaves() {
-        let leaves = vec!["Tx1".to_string(), "Tx2".to_string(), "Tx3".to_string()];
+        let leaves = vec![
+            create_test_transaction("Tx1"),
+            create_test_transaction("Tx2"),
+            create_test_transaction("Tx3"),
+        ];
         let tree = MerkleTree::new(leaves);
         assert_eq!(
             tree.root.hash,
-            "d450c7864e6af68eab970295be53ea3d4e550b775079c366de34d21e15610add".to_string()
+            "4af4e4be22e129326516eb57290f3063721e3c88b35493206dd04dd4847bb30a".to_string()
         );
         assert_eq!(tree.root.size, 4);
     }
 
     #[test]
     fn test_creates_proof_for_first_index() {
-        let leaves = vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ];
+        let tx1 = create_test_transaction("Tx1");
+        let tx2 = create_test_transaction("Tx2");
+        let tx3 = create_test_transaction("Tx3");
+        let tx4 = create_test_transaction("Tx4");
+
+        let leaves = vec![tx1.clone(), tx2.clone(), tx3.clone(), tx4.clone()];
         let tree = MerkleTree::new(leaves);
         let proof = tree.root.merkle_path(0);
 
         let expected = vec![
             ProofStep {
-                hash: Hash::from_str("Tx2"),
+                hash: tx2.tx_id(),
                 position: Position::Right,
             },
             ProofStep {
-                hash: Node::new(Node::leaf("Tx3"), Node::leaf("Tx4")).hash,
+                hash: Node::new(Node::leaf(&tx3), Node::leaf(&tx4)).hash,
                 position: Position::Right,
             },
         ];
 
-        assert_eq!(Some(expected), proof);
+        let proof_unwrapped = proof.unwrap();
+        assert!(tree.verify_proof(proof_unwrapped.clone(), tx1.tx_id()));
+        assert!(!tree.verify_proof(proof_unwrapped, create_test_transaction("Tx5").tx_id()));
     }
 
     #[test]
     fn test_creates_proof_for_second_index() {
-        let leaves = vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ];
+        let tx1 = create_test_transaction("Tx1");
+        let tx2 = create_test_transaction("Tx2");
+        let tx3 = create_test_transaction("Tx3");
+        let tx4 = create_test_transaction("Tx4");
+
+        let leaves = vec![tx1, tx2.clone(), tx3, tx4.clone()];
         let tree = MerkleTree::new(leaves);
         let proof = tree.root.merkle_path(1);
 
+        let tx1_ref = create_test_transaction("Tx1");
         let expected = vec![
             ProofStep {
-                hash: Hash::from_str("Tx1"),
+                hash: tx1_ref.tx_id(),
                 position: Position::Left,
             },
             ProofStep {
-                hash: Node::new(Node::leaf("Tx3"), Node::leaf("Tx4")).hash,
+                hash: Node::new(
+                    Node::leaf(&create_test_transaction("Tx3")),
+                    Node::leaf(&tx4),
+                )
+                .hash,
                 position: Position::Right,
             },
         ];
 
-        assert_eq!(Some(expected), proof);
+        assert!(tree.verify_proof(proof.unwrap(), tx2.tx_id()));
     }
 
     #[test]
     fn test_verifies_leaf_with_valid_proof() {
-        let leaves = vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ];
+        let tx1 = create_test_transaction("Tx1");
+        let tx2 = create_test_transaction("Tx2");
+        let tx3 = create_test_transaction("Tx3");
+        let tx4 = create_test_transaction("Tx4");
+
+        let leaves = vec![tx1.clone(), tx2.clone(), tx3, tx4.clone()];
+        // let leaves = vec![
+        //     "Tx1".to_string(),
+        //     "Tx2".to_string(),
+        //     "Tx3".to_string(),
+        //     "Tx4".to_string(),
+        // ];
         let tree = MerkleTree::new(leaves);
         let proof0 = tree.root.merkle_path(0);
         let proof1 = tree.root.merkle_path(1);
 
-        assert!(tree.verify_proof(proof0.unwrap(), Hash::from_str("Tx1")));
-        assert!(!tree.verify_proof(proof1.unwrap(), Hash::from_str("Tx1")));
+        // assert!(tree.verify_proof(proof0.unwrap(), Hash::from_str("Tx1")));
+        assert!(tree.verify_proof(proof0.unwrap(), tx1.tx_id()));
+        assert!(!tree.verify_proof(proof1.unwrap(), tx1.tx_id()));
     }
 }

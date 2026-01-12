@@ -6,18 +6,19 @@ pub use bits::DifficultyTarget;
 use crate::hash::Hash;
 use crate::merkle::MerkleTree;
 use crate::timestamp::Timestamp;
+use crate::transaction::Transaction;
 use header::BlockHeader;
 
 #[derive(Debug, Clone, Eq)]
 pub struct Block {
     pub header: BlockHeader,
-    pub transactions: Vec<String>,
+    pub transactions: Vec<Transaction>,
 }
 
 impl Block {
     pub fn new(
         previous_hash: Option<Hash>,
-        transactions: Vec<String>,
+        transactions: Vec<Transaction>,
         timestamp: Option<Timestamp>,
         nonce: u32,
     ) -> Self {
@@ -42,7 +43,11 @@ impl Block {
         self.header.hash()
     }
 
-    pub fn genesis(transactions: Vec<String>, timestamp: Option<Timestamp>, nonce: u32) -> Self {
+    pub fn genesis(
+        transactions: Vec<Transaction>,
+        timestamp: Option<Timestamp>,
+        nonce: u32,
+    ) -> Self {
         Self::new(None, transactions, timestamp, nonce)
     }
 }
@@ -57,43 +62,74 @@ impl PartialEq for Block {
 mod tests {
     use super::*;
 
+    fn create_test_transactions() -> Vec<Transaction> {
+        vec![
+            Transaction::new(
+                1,
+                "alice".to_string(),
+                "bob".to_string(),
+                1000,
+                Some(Timestamp::new(0)),
+            ),
+            Transaction::new(
+                1,
+                "bob".to_string(),
+                "charlie".to_string(),
+                500,
+                Some(Timestamp::new(0)),
+            ),
+            Transaction::new(
+                1,
+                "charlie".to_string(),
+                "dave".to_string(),
+                750,
+                Some(Timestamp::new(0)),
+            ),
+            Transaction::coinbase("miner".to_string(), 5000000, Some(Timestamp::new(0))),
+        ]
+    }
+
     #[test]
     fn test_creates_genesis_block() {
-        let transactions = vec![
-            "Tx1".to_string(),
-            "Tx2".to_string(),
-            "Tx3".to_string(),
-            "Tx4".to_string(),
-        ];
+        let transactions = create_test_transactions();
         let block = Block::genesis(transactions, Some(Timestamp::new(0)), 0);
 
         assert_eq!(block.header.previous_hash, Hash::default());
         assert_eq!(
             block.hash(),
-            "84c32ec45ffb02449c58ddc80c8b58e51da1d5b630f0e18dfc63ac5983e16139"
+            "2ec7676f56d345c71f9bcf8b0f44de42a81a7edce4ab8f96a4c3da6533a902ab"
         );
     }
 
     #[test]
     fn test_creates_block_with_previous() {
-        let genesis = Block::genesis(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-            0,
-        );
+        let genesis = Block::genesis(create_test_transactions(), Some(Timestamp::new(0)), 0);
 
         let next_block = Block::new(
             Some(genesis.hash().clone()),
             vec![
-                "Tx5".to_string(),
-                "Tx6".to_string(),
-                "Tx7".to_string(),
-                "Tx8".to_string(),
+                Transaction::new(
+                    1,
+                    "eve".to_string(),
+                    "frank".to_string(),
+                    2000,
+                    Some(Timestamp::new(0)),
+                ),
+                Transaction::new(
+                    1,
+                    "frank".to_string(),
+                    "grace".to_string(),
+                    1500,
+                    Some(Timestamp::new(0)),
+                ),
+                Transaction::new(
+                    1,
+                    "grace".to_string(),
+                    "henry".to_string(),
+                    800,
+                    Some(Timestamp::new(0)),
+                ),
+                Transaction::coinbase("miner2".to_string(), 5000000, Some(Timestamp::new(0))),
             ],
             Some(Timestamp::new(0)),
             0,
@@ -103,60 +139,31 @@ mod tests {
         assert_eq!(next_block.header.timestamp, Timestamp::new(0));
         assert_eq!(
             next_block.hash(),
-            "0c9713b3c13b1301c5f108c27926aaa85fa4b2ddefca76e206916384de9c2811"
+            "22365fbfe1880bef49e3261ec9e7ae3bf411abbd836685990a6b97bb96e7a68d"
         );
     }
 
     #[test]
     fn test_two_blocks_with_the_same_transactions_have_equal_hash() {
-        let block = Block::genesis(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-            0,
-        );
-
-        let other_block = Block::genesis(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-            0,
-        );
+        let transactions = create_test_transactions();
+        let block = Block::genesis(transactions.clone(), Some(Timestamp::new(0)), 0);
+        let other_block = Block::genesis(transactions, Some(Timestamp::new(0)), 0);
 
         assert_eq!(block, other_block);
     }
 
     #[test]
     fn test_two_blocks_with_the_different_transactions_have_not_equal_hash() {
-        let block = Block::genesis(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx4".to_string(),
-            ],
+        let transactions1 = create_test_transactions();
+        let mut transactions2 = create_test_transactions();
+        transactions2[3] = Transaction::coinbase(
+            "different_miner".to_string(),
+            5000000,
             Some(Timestamp::new(0)),
-            0,
         );
 
-        let other_block = Block::genesis(
-            vec![
-                "Tx1".to_string(),
-                "Tx2".to_string(),
-                "Tx3".to_string(),
-                "Tx5".to_string(),
-            ],
-            Some(Timestamp::new(0)),
-            0,
-        );
+        let block = Block::genesis(transactions1, Some(Timestamp::new(0)), 0);
+        let other_block = Block::genesis(transactions2, Some(Timestamp::new(0)), 0);
 
         assert_ne!(block, other_block);
     }
